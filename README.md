@@ -12,7 +12,7 @@ My main goal with this project is to **learn and understand how zero-knowledge p
 ## 🚀 Getting Started
 
 ### Install dependencies
-"
+
 ```bash
 npm install
 ```
