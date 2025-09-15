@@ -1,6 +1,6 @@
 # Zkvote
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/fmcruz01/zk-vote/Build.yml?branch=main)](https://github.com/fmcruz01/zk-vote/actions)
+[![CI](https://github.com/fmcruz01/zk-vote/actions/workflows/Build.yml/badge.svg?branch=main&event=push)](https://github.com/fmcruz01/zk-vote/actions/workflows/Build.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.md)
 
 A simple decentralized application that explores how **zero-knowledge proofs (zk-SNARKs)** can be applied to a real-world use case: **anonymous and verifiable voting**.  
