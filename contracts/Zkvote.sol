@@ -1,39 +1,54 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.30;
 
+import {Groth16Verifier} from "./Verifier.sol";
+
 contract Zkvote {
-    struct Voter {
-        bool registered;
-        bool voted;
-        bytes32 commitment;
+    error InvalidCommitment(
+        uint256 registeredCommitment,
+        uint256 proofCommitment
+    );
+
+    struct Proof {
+        uint[2] a;
+        uint[2][2] b;
+        uint[2] c;
+        uint[2] input;
     }
 
-    mapping(address => Voter) public voters;
+    Groth16Verifier public verifier;
+    mapping(address => uint256) public commitments;
+    mapping(address => bool) public hasVoted;
     bool public votingOpen = true;
     uint public yesVotes;
     uint public noVotes;
+
+    constructor(address _verifier) {
+        verifier = Groth16Verifier(_verifier);
+    }
 
     modifier onlyWhileOpen() {
         require(votingOpen, "Voting is closed.");
         _;
     }
 
-    function registerVoter(bytes32 _commitment) public onlyWhileOpen {
-        require(!voters[msg.sender].registered, "User already reigstered.");
-        voters[msg.sender] = Voter(true, false, _commitment);
+    function registerVoter(uint256 _commitment) public onlyWhileOpen {
+        require(commitments[msg.sender] == 0, "User already registered.");
+        commitments[msg.sender] = _commitment;
     }
 
-    function submitVote(bool _vote) public onlyWhileOpen {
-        Voter memory voter = voters[msg.sender];
-        require(voter.registered, "User not registered.");
-        require(!voter.voted, "User already voted.");
+    function submitVote(Proof memory proof) external onlyWhileOpen {
+        require(!hasVoted[msg.sender], "User already voted.");
 
-        voter.voted = true;
-        if (_vote) {
-            yesVotes++;
-        } else {
-            noVotes++;
-        }
+        if (commitments[msg.sender] != proof.input[0])
+            revert InvalidCommitment(commitments[msg.sender], proof.input[0]);
+
+        require(
+            verifier.verifyProof(proof.a, proof.b, proof.c, proof.input),
+            "Invalid proof."
+        );
+
+        hasVoted[msg.sender] = true;
     }
 
     function closeVoting() public {
@@ -42,13 +57,5 @@ contract Zkvote {
 
     function getResults() public view returns (uint yes, uint no) {
         return (yesVotes, noVotes);
-    }
-
-    function hasVoted() public view returns (bool) {
-        return voters[msg.sender].voted;
-    }
-
-    function isRegistered() public view returns (bool) {
-        return voters[msg.sender].registered;
     }
 }
